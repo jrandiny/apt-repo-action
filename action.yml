@@ -2,7 +2,7 @@ name: "Github page APT repo"
 description: "Setup and manage APT repo"
 inputs:
   github_token:
-    description: "Github token"
+    description: "Github token with commit and push scope"
     required: true
   arch:
     description: "Newline-delimited list of supported architecture"
@@ -22,8 +22,8 @@ inputs:
   private_key:
     description: "GPG private key for signing apt repo"
     required: true
-  key_secret:
-    description: "Secret of GPG key"
+  key_passphrase:
+    description: "Passphrase of GPG private key"
     required: false
   page_branch:
     description: "Branch of Github page"
@@ -36,7 +36,6 @@ inputs:
   debug:
     description: "Print debug log"
     required: false
-    default: false
 runs:
   using: "docker"
   image: "Dockerfile"

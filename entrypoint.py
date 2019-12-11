@@ -4,8 +4,9 @@ import logging
 import gnupg
 import git
 import shutil
+from key import detectPublicKey, importPrivateKey
 
-debug = os.environ.get('INPUT_DEBUG')
+debug = os.environ.get('INPUT_DEBUG', False)
 
 if debug:
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
@@ -43,9 +44,9 @@ if __name__ == '__main__':
         logging.error('File version target is not listed in repo supported version list')
         sys.exit(1)
 
-    pub_key = os.environ.get('INPUT_PUBLIC_KEY')
-    sign_key = os.environ.get('INPUT_PRIVATE_KEY')
-    secret = os.environ.get('INPUT_KEY_SECRET')
+    key_public = os.environ.get('INPUT_PUBLIC_KEY')
+    key_private = os.environ.get('INPUT_PRIVATE_KEY')
+    key_passphrase = os.environ.get('INPUT_KEY_PASSPHRASE')
 
     logging.debug(github_token)
     logging.debug(arch_list)
@@ -53,7 +54,9 @@ if __name__ == '__main__':
 
     logging.info('-- Done parsing input --')
 
-    logging.info('-- Cloning current repo --')
+    # Clone repo
+
+    logging.info('-- Cloning current Github page --')
 
     github_user = github_repo.split('/')[0]
     github_slug = github_repo.split('/')[1]
@@ -73,71 +76,27 @@ if __name__ == '__main__':
 
     logging.info('-- Done cloning current Github page --')
 
+    # Prepare key
+
     logging.info('-- Importing key --')
 
-    logging.info('Detecting public key')
-
-    logging.debug('Detecting existing public key')
-
     key_dir = os.path.join(github_slug, 'public.key')
-    key_exists = os.path.isfile(key_dir)
-
-    logging.debug('Existing public key file exists? {}'.format(key_exists))
-
     gpg = gnupg.GPG()
 
-    if not key_exists:
-        logging.info('Directory doesn\'t contain public.key trying to import')
-        if pub_key is None:
-            logging.error('Please specify public key for setup')
-            sys.exit(1)
-
-        logging.debug('Trying to import key')
-
-        public_import_result = gpg.import_keys(pub_key)
-        public_import_result.ok_reason
-
-        logging.debug(public_import_result)
-
-        if public_import_result.count != 1:
-            logging.error('Invalid public key provided, please provide 1 valid key')
-            sys.exit(1)
-
-        with open(key_dir, 'w') as key_file:
-            key_file.write(pub_key)
-
-    logging.info('Public key valid')
-
-    logging.info('Importing private key')
-
-    private_import_result = gpg.import_keys(sign_key)
-
-    if private_import_result.count != 1:
-        logging.error('Invalid private key provided, please provide 1 valid key')
-        sys.exit(1)
-
-    logging.debug(private_import_result)
-
-    if not any(data['ok'] >= '16' for data in private_import_result.results):
-        logging.error('Key provided is not a secret key')
-        sys.exit(1)
-
-    private_key_id = private_import_result.results[0]['fingerprint']
-
-    logging.info('Private key valid')
-
-    logging.debug('Key id: {}'.format(private_key_id))
+    detectPublicKey(gpg, key_dir, key_public)
+    private_key_id = importPrivateKey(gpg, key_private)
 
     logging.info('-- Done importing key --')
+
+    # Prepare repo
 
     logging.info('-- Preparing repo directory --')
 
     apt_dir = os.path.join(github_slug, apt_folder)
-
     apt_conf_dir = os.path.join(apt_dir, 'conf')
 
     if not os.path.isdir(apt_folder):
-        logging.debug('Existing repo not detected, creating new repo')
+        logging.info('Existing repo not detected, creating new repo')
         os.mkdir(apt_dir)
         os.mkdir(apt_conf_dir)
 
@@ -154,9 +113,12 @@ if __name__ == '__main__':
 
     logging.info('-- Done preparing repo directory --')
 
+    # Fill repo
+
     logging.info('-- Adding package to repo --')
 
     for deb, target in zip(deb_file_list, deb_file_version_list):
+        logging.info('Adding {}'.format(deb))
         os.system(
             'reprepro -b {} --export=silent-never includedeb {} {}'.format(
                 apt_dir,
@@ -165,11 +127,15 @@ if __name__ == '__main__':
             )
         )
 
-    gpg.sign('test', keyid=private_key_id, passphrase=secret)
+    logging.debug('Signing to unlock key on gpg agent')
+    gpg.sign('test', keyid=private_key_id, passphrase=key_passphrase)
 
+    logging.debug('Export and sign repo')
     os.system('reprepro -b {} export'.format(apt_dir))
 
     logging.info('-- Done adding package to repo --')
+
+    # Commiting and push changes
 
     logging.info('-- Saving changes --')
 
