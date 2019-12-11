@@ -1,0 +1,42 @@
+name: "Github page APT repo"
+description: "Setup and manage APT repo"
+inputs:
+  github_token:
+    description: "Github token"
+    required: true
+  arch:
+    description: "Newline-delimited list of supported architecture"
+    required: true
+  version:
+    description: "Newline-delimited list of supported version"
+    required: true
+  file:
+    description: "Newline-delimited list of .deb files"
+    required: true
+  file_target_version:
+    description: "Newline-delimited list of version target of supplied .deb file"
+    required: true
+  public_key:
+    description: "GPG public key for apt repo"
+    required: false
+  private_key:
+    description: "GPG private key for signing apt repo"
+    required: true
+  key_secret:
+    description: "Secret of GPG key"
+    required: false
+  page_branch:
+    description: "Branch of Github page"
+    required: false
+    default: "gh-pages"
+  repo_folder:
+    description: "Location of APT repo folder relative to root of Github page"
+    required: false
+    default: "repo"
+  debug:
+    description: "Print debug log"
+    required: false
+    default: false
+runs:
+  using: "docker"
+  image: "Dockerfile"
