@@ -95,7 +95,7 @@ if __name__ == '__main__':
     apt_dir = os.path.join(github_slug, apt_folder)
     apt_conf_dir = os.path.join(apt_dir, 'conf')
 
-    if not os.path.isdir(apt_folder):
+    if not os.path.isdir(apt_dir):
         logging.info('Existing repo not detected, creating new repo')
         os.mkdir(apt_dir)
         os.mkdir(apt_conf_dir)
