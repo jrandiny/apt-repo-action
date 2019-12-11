@@ -1,5 +1,5 @@
-name: "Github page APT repo"
-description: "Setup and manage APT repo"
+name: "Github pages APT repo"
+description: "Setup and manage APT repo on Github pages"
 inputs:
   github_token:
     description: "Github token with commit and push scope"
@@ -8,7 +8,7 @@ inputs:
     description: "Newline-delimited list of supported architecture"
     required: true
   version:
-    description: "Newline-delimited list of supported version"
+    description: "Newline-delimited list of supported (linux) version"
     required: true
   file:
     description: "Newline-delimited list of .deb files"
@@ -26,11 +26,11 @@ inputs:
     description: "Passphrase of GPG private key"
     required: false
   page_branch:
-    description: "Branch of Github page"
+    description: "Branch of Github pages"
     required: false
     default: "gh-pages"
   repo_folder:
-    description: "Location of APT repo folder relative to root of Github page"
+    description: "Location of APT repo folder relative to root of Github pages"
     required: false
     default: "repo"
   debug:
