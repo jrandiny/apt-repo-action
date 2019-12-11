@@ -8,5 +8,6 @@ RUN apt update
 RUN apt install -y reprepro gpg python3 python3-git python3-gnupg expect
 
 COPY entrypoint.py /entrypoint.py
+COPY key.py /key.py
 
 ENTRYPOINT ["python3","/entrypoint.py"]
