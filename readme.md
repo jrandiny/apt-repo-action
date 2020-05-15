@@ -8,11 +8,11 @@ This action will setup and manage a simple APT repo on your github pages
 
 **Required** Personal access token with commit and push scope granted.
 
-### `arch`
+### `repo_supported_arch`
 
 **Required** Newline-delimited list of supported architecture
 
-### `version`
+### `repo_supported_version`
 
 **Required** Newline-delimited list of supported (linux) version
 

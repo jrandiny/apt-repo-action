@@ -4,10 +4,10 @@ inputs:
   github_token:
     description: "Github token with commit and push scope"
     required: true
-  arch:
+  repo_supported_arch:
     description: "Newline-delimited list of supported architecture"
     required: true
-  version:
+  repo_supported_version:
     description: "Newline-delimited list of supported (linux) version"
     required: true
   file:

@@ -20,8 +20,8 @@ if __name__ == '__main__':
     logging.info('-- Parsing input --')
 
     github_token = os.environ.get('INPUT_GITHUB_TOKEN')
-    supported_arch = os.environ.get('INPUT_ARCH')
-    supported_version = os.environ.get('INPUT_VERSION')
+    supported_arch = os.environ.get('INPUT_REPO_SUPPORTED_ARCH')
+    supported_version = os.environ.get('INPUT_REPO_SUPPORTED_VERSION')
     deb_file_path = os.environ.get('INPUT_FILE')
     deb_file_target_version = os.environ.get('INPUT_FILE_TARGET_VERSION')
     github_repo = os.environ.get('GITHUB_REPOSITORY')
