@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     # Get metadata
     all_commit = git_repo.iter_commits()
-    all_apt_action_commit = filter(lambda x: (x.message[:12] == '[apt-action]'), all_commit)
+    all_apt_action_commit = list(filter(lambda x: (x.message[:12] == '[apt-action]'), all_commit))
     apt_action_metadata_str = list(
         map(
             lambda x: re.findall('apt-action-metadata({.+})$', x.message),
@@ -99,6 +99,8 @@ if __name__ == '__main__':
     )
     apt_action_metadata = list(map(lambda x: json.loads(x[0]), apt_action_metadata_str))
 
+    logging.debug(list(all_commit))
+    logging.debug(all_apt_action_commit)
     logging.debug(apt_action_metadata_str)
 
     for check_metadata in apt_action_metadata:
