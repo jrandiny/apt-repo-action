@@ -4,6 +4,9 @@ import logging
 import gnupg
 import git
 import shutil
+import re
+import json
+from debian.debfile import DebFile
 from key import detectPublicKey, importPrivateKey
 
 debug = os.environ.get('INPUT_DEBUG', False)
@@ -17,30 +20,32 @@ if __name__ == '__main__':
     logging.info('-- Parsing input --')
 
     github_token = os.environ.get('INPUT_GITHUB_TOKEN')
-    arch = os.environ.get('INPUT_ARCH')
-    version = os.environ.get('INPUT_VERSION')
-    deb_file = os.environ.get('INPUT_FILE')
-    deb_file_version = os.environ.get('INPUT_FILE_TARGET_VERSION')
+    supported_arch = os.environ.get('INPUT_ARCH')
+    supported_version = os.environ.get('INPUT_VERSION')
+    deb_file_path = os.environ.get('INPUT_FILE')
+    deb_file_target_version = os.environ.get('INPUT_FILE_TARGET_VERSION')
     github_repo = os.environ.get('GITHUB_REPOSITORY')
 
     gh_branch = os.environ.get('INPUT_PAGE_BRANCH', 'gh-pages')
     apt_folder = os.environ.get('INPUT_REPO_FOLDER', 'repo')
 
-    if None in (github_token, arch, version, deb_file):
+    if None in (github_token, supported_arch, supported_version, deb_file_path):
         logging.error('Required key is missing')
         sys.exit(1)
 
-    arch_list = arch.strip().split('\n')
-    version_list = version.strip().split('\n')
-    deb_file_list = deb_file.strip().split('\n')
-    deb_file_version_list = deb_file_version.strip().split('\n')
+    supported_arch_list = supported_arch.strip().split('\n')
+    supported_version_list = supported_version.strip().split('\n')
+    deb_file_list = deb_file_path.strip().split('\n')
+    deb_file_version_list = deb_file_target_version.strip().split('\n')
 
-    logging.debug(arch_list)
-    logging.debug(version_list)
+    logging.debug(supported_arch_list)
+    logging.debug(supported_version_list)
     logging.debug(deb_file_list)
     logging.debug(deb_file_version_list)
 
-    if any((target_version not in version_list) for target_version in deb_file_version_list):
+    if any(
+        (target_version not in supported_version_list) for target_version in deb_file_version_list
+    ):
         logging.error('File version target is not listed in repo supported version list')
         sys.exit(1)
 
@@ -49,8 +54,8 @@ if __name__ == '__main__':
     key_passphrase = os.environ.get('INPUT_KEY_PASSPHRASE')
 
     logging.debug(github_token)
-    logging.debug(arch_list)
-    logging.debug(version_list)
+    logging.debug(supported_arch_list)
+    logging.debug(supported_version_list)
 
     logging.info('-- Done parsing input --')
 
@@ -70,9 +75,32 @@ if __name__ == '__main__':
         branch=gh_branch,
     )
 
-    if git_repo.head.commit.message[:12] == '[apt-action]':
-        logging.info('Loop detected, exiting')
-        sys.exit(0)
+    # Generate metadata
+    deb_file_handle = DebFile(filename=deb_file_path)
+    deb_file_control = deb_file_handle.debcontrol()
+
+    current_metadata = {
+        'format_version': 1,
+        'sw_version': deb_file_control['Version'],
+        'sw_architecture': deb_file_control['Architecture'],
+        'linux_version': deb_file_target_version
+    }
+
+    current_metadata_str = json.dumps(current_metadata)
+    logging.debug('Metadata {}'.format(current_metadata_str))
+
+    # Get metadata
+    all_commit = git_repo.iter_commits()
+    all_apt_action_commit = filter(lambda x: (x.message[:12] == '[apt-action]'), all_commit)
+    apt_action_metadata_str = map(lambda x: re.findall('apt-action-metadata({.+})$', x.message))
+    apt_action_metadata = map(lambda x: json.loads(x[0]))
+
+    logging.debug(apt_action_metadata)
+
+    for check_metadata in apt_action_metadata:
+        if (check_metadata == current_metadata):
+            logging.error('Loop detected, exiting')
+            sys.exit(1)
 
     logging.info('-- Done cloning current Github page --')
 
@@ -102,11 +130,11 @@ if __name__ == '__main__':
 
     logging.debug('Creating repo config')
 
-    with open(os.path.join(apt_conf_dir, 'distributions'), "w") as distributions_file:
-        for codename in version_list:
+    with open(os.path.join(apt_conf_dir, 'distributions'), 'w') as distributions_file:
+        for codename in supported_version_list:
             distributions_file.write('Description: {}\n'.format(github_repo))
             distributions_file.write('Codename: {}\n'.format(codename))
-            distributions_file.write('Architectures: {}\n'.format(' '.join(arch_list)))
+            distributions_file.write('Architectures: {}\n'.format(' '.join(supported_arch_list)))
             distributions_file.write('Components: main\n')
             distributions_file.write('SignWith: {}\n'.format(private_key_id))
             distributions_file.write('\n\n')
@@ -144,7 +172,9 @@ if __name__ == '__main__':
     )
 
     git_repo.git.add('*')
-    git_repo.index.commit('[apt-action] Update apt repo')
+    git_repo.index.commit(
+        '[apt-action] Update apt repo\n\n\napt-action-metadata{}'.format(current_metadata_str)
+    )
     origin = git_repo.remote()
     origin.push()
 
