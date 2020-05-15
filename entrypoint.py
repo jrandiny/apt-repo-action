@@ -72,8 +72,9 @@ if __name__ == '__main__':
     git_repo = git.Repo.clone_from(
         'https://{}@github.com/{}.git'.format(github_token, github_repo),
         github_slug,
-        branch=gh_branch,
     )
+
+    git_repo.git.branch(gh_branch)
 
     # Generate metadata
     deb_file_handle = DebFile(filename=deb_file_path)
