@@ -89,7 +89,7 @@ if __name__ == '__main__':
     logging.debug('Metadata {}'.format(current_metadata_str))
 
     # Get metadata
-    all_commit = git_repo.iter_commits()
+    all_commit = git_repo.iter_commits(gh_branch)
     all_apt_action_commit = list(filter(lambda x: (x.message[:12] == '[apt-action]'), all_commit))
     apt_action_metadata_str = list(
         map(
