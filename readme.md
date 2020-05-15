@@ -18,11 +18,11 @@ This action will setup and manage a simple APT repo on your github pages
 
 ### `file`
 
-**Required** Newline-delimited list of .deb files to be included
+**Required** .deb files to be included
 
 ### `file_target_version`
 
-**Required** Newline-delimited list of (linux) version target of supplied .deb file
+**Required** Version target of supplied .deb file
 
 ### `private_key`
 

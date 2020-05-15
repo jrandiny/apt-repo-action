@@ -35,17 +35,15 @@ if __name__ == '__main__':
 
     supported_arch_list = supported_arch.strip().split('\n')
     supported_version_list = supported_version.strip().split('\n')
-    deb_file_list = deb_file_path.strip().split('\n')
-    deb_file_version_list = deb_file_target_version.strip().split('\n')
+    deb_file_path = deb_file_path.strip()
+    deb_file_version = deb_file_target_version.strip()
 
     logging.debug(supported_arch_list)
     logging.debug(supported_version_list)
-    logging.debug(deb_file_list)
-    logging.debug(deb_file_version_list)
+    logging.debug(deb_file_path)
+    logging.debug(deb_file_version)
 
-    if any(
-        (target_version not in supported_version_list) for target_version in deb_file_version_list
-    ):
+    if deb_file_version not in supported_version_list:
         logging.error('File version target is not listed in repo supported version list')
         sys.exit(1)
 
@@ -84,7 +82,7 @@ if __name__ == '__main__':
         'format_version': 1,
         'sw_version': deb_file_control['Version'],
         'sw_architecture': deb_file_control['Architecture'],
-        'linux_version': deb_file_target_version
+        'linux_version': deb_file_version
     }
 
     current_metadata_str = json.dumps(current_metadata)
@@ -146,15 +144,14 @@ if __name__ == '__main__':
 
     logging.info('-- Adding package to repo --')
 
-    for deb, target in zip(deb_file_list, deb_file_version_list):
-        logging.info('Adding {}'.format(deb))
-        os.system(
-            'reprepro -b {} --export=silent-never includedeb {} {}'.format(
-                apt_dir,
-                target,
-                deb,
-            )
+    logging.info('Adding {}'.format(deb_file_path))
+    os.system(
+        'reprepro -b {} --export=silent-never includedeb {} {}'.format(
+            apt_dir,
+            deb_file_version,
+            deb_file_path,
         )
+    )
 
     logging.debug('Signing to unlock key on gpg agent')
     gpg.sign('test', keyid=private_key_id, passphrase=key_passphrase)
