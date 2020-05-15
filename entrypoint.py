@@ -97,7 +97,7 @@ if __name__ == '__main__':
     )
     apt_action_metadata = map(lambda x: json.loads(x[0]), apt_action_metadata_str)
 
-    logging.debug(apt_action_metadata)
+    logging.debug(apt_action_metadata_str)
 
     for check_metadata in apt_action_metadata:
         if (check_metadata == current_metadata):
