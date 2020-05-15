@@ -176,7 +176,6 @@ if __name__ == '__main__':
     git_repo.index.commit(
         '[apt-action] Update apt repo\n\n\napt-action-metadata{}'.format(current_metadata_str)
     )
-    origin = git_repo.remote()
-    origin.push()
+    git_repo.git.push('--set-upstream', 'origin', gh_branch)
 
     logging.info('-- Done saving changes --')
