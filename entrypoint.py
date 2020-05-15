@@ -72,7 +72,7 @@ if __name__ == '__main__':
         github_slug,
     )
 
-    git_repo.git.branch(gh_branch)
+    git_repo.git.checkout('HEAD', b=gh_branch)
 
     # Generate metadata
     deb_file_handle = DebFile(filename=deb_file_path)
