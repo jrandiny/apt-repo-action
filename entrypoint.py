@@ -72,7 +72,15 @@ if __name__ == '__main__':
         github_slug,
     )
 
-    git_repo.git.checkout('HEAD', b=gh_branch)
+    git_refs = git_repo.remotes.origin.refs
+    git_refs_name = list(map(lambda x: str(x).split('/')[-1], git_refs))
+
+    logging.debug(git_refs_name)
+
+    if gh_branch not in git_refs_name:
+        git_repo.git.checkout(b=gh_branch)
+    else:
+        git_repo.git.checkout(gh_branch)
 
     # Generate metadata
     deb_file_handle = DebFile(filename=deb_file_path)
@@ -99,7 +107,6 @@ if __name__ == '__main__':
     )
     apt_action_metadata = list(map(lambda x: json.loads(x[0]), apt_action_metadata_str))
 
-    logging.debug(list(all_commit))
     logging.debug(all_apt_action_commit)
     logging.debug(apt_action_metadata_str)
 
