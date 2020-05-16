@@ -83,6 +83,9 @@ if __name__ == '__main__':
         git_repo.git.checkout(gh_branch)
 
     # Generate metadata
+    logging.debug("cwd : {}".format(os.getcwd()))
+    logging.debug(os.listdir())
+    
     deb_file_handle = DebFile(filename=deb_file_path)
     deb_file_control = deb_file_handle.debcontrol()
 
