@@ -85,7 +85,7 @@ if __name__ == '__main__':
     # Generate metadata
     logging.debug("cwd : {}".format(os.getcwd()))
     logging.debug(os.listdir())
-    
+
     deb_file_handle = DebFile(filename=deb_file_path)
     deb_file_control = deb_file_handle.debcontrol()
 
@@ -108,10 +108,11 @@ if __name__ == '__main__':
             all_apt_action_commit,
         )
     )
-    apt_action_metadata = list(map(lambda x: json.loads(x[0]), apt_action_metadata_str))
+    apt_action_valid_metadata_str = list(filter(lambda x: len(x) > 0, apt_action_metadata_str))
+    apt_action_metadata = list(map(lambda x: json.loads(x[0]), apt_action_valid_metadata_str))
 
     logging.debug(all_apt_action_commit)
-    logging.debug(apt_action_metadata_str)
+    logging.debug(apt_action_valid_metadata_str)
 
     for check_metadata in apt_action_metadata:
         if (check_metadata == current_metadata):
