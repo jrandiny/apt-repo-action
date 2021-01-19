@@ -3,6 +3,7 @@ import sys
 import logging
 import gnupg
 import git
+import glob
 import shutil
 import re
 import json
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     logging.debug("cwd : {}".format(os.getcwd()))
     logging.debug(os.listdir())
 
-    deb_file_handle = DebFile(filename=deb_file_path)
+    deb_file_handle = DebFile(filename=glob.glob(deb_file_path)[0])
     deb_file_control = deb_file_handle.debcontrol()
 
     current_metadata = {
