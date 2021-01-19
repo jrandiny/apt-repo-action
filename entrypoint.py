@@ -64,13 +64,18 @@ if __name__ == '__main__':
 
     github_user = github_repo.split('/')[0]
     github_slug = github_repo.split('/')[1]
+    
+    git_working_folder = github_slug + gh_branch
 
-    if os.path.exists(github_slug):
-        shutil.rmtree(github_slug)
+    if os.path.exists(git_working_folder):
+        shutil.rmtree(git_working_folder)
 
+    logging.debug("cwd : {}".format(os.getcwd()))
+    logging.debug(os.listdir())
+        
     git_repo = git.Repo.clone_from(
         'https://{}@github.com/{}.git'.format(github_token, github_repo),
-        github_slug,
+        git_working_folder,
     )
 
     git_refs = git_repo.remotes.origin.refs
@@ -126,10 +131,10 @@ if __name__ == '__main__':
 
     logging.info('-- Importing key --')
 
-    key_dir = os.path.join(github_slug, 'public.key')
+    key_file = os.path.join(git_working_folder, 'public.key')
     gpg = gnupg.GPG()
 
-    detectPublicKey(gpg, key_dir, key_public)
+    detectPublicKey(gpg, key_file, key_public)
     private_key_id = importPrivateKey(gpg, key_private)
 
     logging.info('-- Done importing key --')
@@ -138,7 +143,7 @@ if __name__ == '__main__':
 
     logging.info('-- Preparing repo directory --')
 
-    apt_dir = os.path.join(github_slug, apt_folder)
+    apt_dir = os.path.join(git_working_folder, apt_folder)
     apt_conf_dir = os.path.join(apt_dir, 'conf')
 
     if not os.path.isdir(apt_dir):
