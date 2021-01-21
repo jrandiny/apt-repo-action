@@ -65,7 +65,7 @@ if __name__ == '__main__':
     github_user = github_repo.split('/')[0]
     github_slug = github_repo.split('/')[1]
     
-    git_working_folder = github_slug + gh_branch
+    git_working_folder = github_slug + "-" + gh_branch
 
     if os.path.exists(git_working_folder):
         shutil.rmtree(git_working_folder)
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     logging.debug(os.listdir())
         
     git_repo = git.Repo.clone_from(
-        'https://{}@github.com/{}.git'.format(github_token, github_repo),
+        'https://x-access-token:{}@github.com/{}.git'.format(github_token, github_repo),
         git_working_folder,
     )
 
