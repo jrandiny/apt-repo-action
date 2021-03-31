@@ -123,7 +123,8 @@ if __name__ == '__main__':
     for check_metadata in apt_action_metadata:
         if (check_metadata == current_metadata):
             logging.info('Loop detected, exiting')
-            sys.exit(0)
+            # Always rebuild the repo in case other settings have changed
+            # sys.exit(0)
 
     logging.info('-- Done cloning current Github page --')
 
