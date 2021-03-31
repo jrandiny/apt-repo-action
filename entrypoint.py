@@ -175,10 +175,9 @@ if __name__ == '__main__':
         deb_file_path,
     )
     reprepro_includedeb_exit = os.waitstatus_to_exitcode(os.system(reprepro_includedeb_cmd))
-    if (reprepro_includedeb_exit != 0) {
+    if (reprepro_includedeb_exit != 0):
         logging.error('Command {} failed with {}'.format(reprepro_includedeb_cmd, reprepro_includedeb_exit))
         sys.exit(reprepro_includedeb_exit)
-    }
 
     logging.debug('Signing to unlock key on gpg agent')
     gpg.sign('test', keyid=private_key_id, passphrase=key_passphrase)
@@ -186,10 +185,9 @@ if __name__ == '__main__':
     logging.debug('Export and sign repo')
     reprepro_export_cmd = 'reprepro -b {} export'.format(apt_dir)
     reprepro_export_exit = os.waitstatus_to_exitcode(os.system(reprepro_export_cmd))
-    if (reprepro_export_exit != 0) {
+    if (reprepro_export_exit != 0):
         logging.error('Command {} failed with {}'.format(reprepro_export_cmd, reprepro_export_exit))
         sys.exit(reprepro_export_exit)
-    }
 
     logging.info('-- Done adding package to repo --')
 
