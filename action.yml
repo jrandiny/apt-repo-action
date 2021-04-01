@@ -3,7 +3,6 @@ description: "Setup and manage APT repo on Github pages"
 inputs:
   github_token:
     description: "Github token with commit and push scope"
-    default: ${{ secrets.GITHUB_TOKEN }}
     required: true
   repo_supported_arch:
     description: "Newline-delimited list of supported architecture"
