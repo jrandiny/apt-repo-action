@@ -18,7 +18,7 @@ This action will setup and manage a simple APT repo on your github pages
 
 ### `file`
 
-**Required** .deb files to be included
+**Required** .deb file to be included
 
 ### `file_target_version`
 

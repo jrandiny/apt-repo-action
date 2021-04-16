@@ -3,6 +3,7 @@ import sys
 import logging
 import gnupg
 import git
+import glob
 import shutil
 import re
 import json
@@ -63,13 +64,18 @@ if __name__ == '__main__':
 
     github_user = github_repo.split('/')[0]
     github_slug = github_repo.split('/')[1]
+    
+    git_working_folder = github_slug + "-" + gh_branch
 
-    if os.path.exists(github_slug):
-        shutil.rmtree(github_slug)
+    if os.path.exists(git_working_folder):
+        shutil.rmtree(git_working_folder)
 
+    logging.debug("cwd : {}".format(os.getcwd()))
+    logging.debug(os.listdir())
+        
     git_repo = git.Repo.clone_from(
-        'https://{}@github.com/{}.git'.format(github_token, github_repo),
-        github_slug,
+        'https://x-access-token:{}@github.com/{}.git'.format(github_token, github_repo),
+        git_working_folder,
     )
 
     git_refs = git_repo.remotes.origin.refs
@@ -86,7 +92,7 @@ if __name__ == '__main__':
     logging.debug("cwd : {}".format(os.getcwd()))
     logging.debug(os.listdir())
 
-    deb_file_handle = DebFile(filename=deb_file_path)
+    deb_file_handle = DebFile(filename=glob.glob(deb_file_path)[0])
     deb_file_control = deb_file_handle.debcontrol()
 
     current_metadata = {
@@ -116,7 +122,7 @@ if __name__ == '__main__':
 
     for check_metadata in apt_action_metadata:
         if (check_metadata == current_metadata):
-            logging.info('Loop detected, exiting')
+            logging.info('This version of this package has already been added to the repo, skipping it')
             sys.exit(0)
 
     logging.info('-- Done cloning current Github page --')
@@ -125,10 +131,10 @@ if __name__ == '__main__':
 
     logging.info('-- Importing key --')
 
-    key_dir = os.path.join(github_slug, 'public.key')
+    key_file = os.path.join(git_working_folder, 'public.key')
     gpg = gnupg.GPG()
 
-    detectPublicKey(gpg, key_dir, key_public)
+    detectPublicKey(gpg, key_file, key_public)
     private_key_id = importPrivateKey(gpg, key_private)
 
     logging.info('-- Done importing key --')
@@ -137,7 +143,7 @@ if __name__ == '__main__':
 
     logging.info('-- Preparing repo directory --')
 
-    apt_dir = os.path.join(github_slug, apt_folder)
+    apt_dir = os.path.join(git_working_folder, apt_folder)
     apt_conf_dir = os.path.join(apt_dir, 'conf')
 
     if not os.path.isdir(apt_dir):
@@ -163,19 +169,25 @@ if __name__ == '__main__':
     logging.info('-- Adding package to repo --')
 
     logging.info('Adding {}'.format(deb_file_path))
-    os.system(
-        'reprepro -b {} --export=silent-never includedeb {} {}'.format(
-            apt_dir,
-            deb_file_version,
-            deb_file_path,
-        )
+    reprepro_includedeb_cmd = 'reprepro -b {} --export=silent-never includedeb {} {}'.format(
+        apt_dir,
+        deb_file_version,
+        deb_file_path,
     )
+    reprepro_includedeb_exit = os.WEXITSTATUS(os.system(reprepro_includedeb_cmd))
+    if (reprepro_includedeb_exit != 0):
+        logging.error('Command {} failed with {}'.format(reprepro_includedeb_cmd, reprepro_includedeb_exit))
+        sys.exit(reprepro_includedeb_exit)
 
     logging.debug('Signing to unlock key on gpg agent')
     gpg.sign('test', keyid=private_key_id, passphrase=key_passphrase)
 
     logging.debug('Export and sign repo')
-    os.system('reprepro -b {} export'.format(apt_dir))
+    reprepro_export_cmd = 'reprepro -b {} export'.format(apt_dir)
+    reprepro_export_exit = os.WEXITSTATUS(os.system(reprepro_export_cmd))
+    if (reprepro_export_exit != 0):
+        logging.error('Command {} failed with {}'.format(reprepro_export_cmd, reprepro_export_exit))
+        sys.exit(reprepro_export_exit)
 
     logging.info('-- Done adding package to repo --')
 
