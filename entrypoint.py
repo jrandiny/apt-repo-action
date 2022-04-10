@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     supported_arch_list = supported_arch.strip().split('\n')
     supported_version_list = supported_version.strip().split('\n')
-    deb_file_path = deb_file_path.strip().split('\n')
+    deb_file_path = [s.strip('" ') for s in deb_file_path.strip().split('\n')]
     deb_file_version = deb_file_target_version.strip()
 
     logging.debug(supported_arch_list)
