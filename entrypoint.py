@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     supported_arch_list = supported_arch.strip().split('\n')
     supported_version_list = supported_version.strip().split('\n')
-    deb_file_path = deb_file_path.strip()
+    deb_file_path = deb_file_path.strip().split('\n')
     deb_file_version = deb_file_target_version.strip()
 
     logging.debug(supported_arch_list)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     logging.debug("cwd : {}".format(os.getcwd()))
     logging.debug(os.listdir())
 
-    deb_file_handle = DebFile(filename=deb_file_path)
+    deb_file_handle = DebFile(filename=deb_file_path[0])
     deb_file_control = deb_file_handle.debcontrol()
 
     current_metadata = {
@@ -160,16 +160,17 @@ if __name__ == '__main__':
 
     # Fill repo
 
-    logging.info('-- Adding package to repo --')
+    logging.info('-- Adding package(s) to repo --')
 
-    logging.info('Adding {}'.format(deb_file_path))
-    os.system(
-        'reprepro -b {} --export=silent-never includedeb {} {}'.format(
-            apt_dir,
-            deb_file_version,
-            deb_file_path,
+    for deb_file in deb_file_path:
+        logging.info('Adding {}'.format(deb_file))
+        os.system(
+            'reprepro -b {} --export=silent-never includedeb {} {}'.format(
+                apt_dir,
+                deb_file_version,
+                deb_file,
+            )
         )
-    )
 
     logging.debug('Signing to unlock key on gpg agent')
     gpg.sign('test', keyid=private_key_id, passphrase=key_passphrase)
